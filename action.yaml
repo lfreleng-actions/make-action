@@ -2,38 +2,81 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2025 The Linux Foundation
 
-# actions-template
-name: "🛠️ Actions Template"
-description: "Description of action"
-# Any relevant notes/observations can go here
+# make-action
+name: "🛠️ Runs make"
+description: "Executes the steps described in a Makefile"
 
 inputs:
-  INPUT:
-    description: "Description of input"
+  # Optional
+  repository:
+    # Uses actions/checkout to clone the repository
+    description: "Remote Git repository URL to download"
     required: false
-    type: string
-    default: "input"
-
-outputs:
-  OUTPUT:
-    description: "Description of output"
-    value: ${{ steps.code.outputs.output }}
+    type: 'string'
+  path:
+    description: "Download the repository to this local filesystem path"
+    required: false
+    type: 'string'
+  makefile_path:
+    description: "Directory path to target Makefile"
+    required: false
+    type: 'string'
+  make_args:
+    description: 'Arguments/flags sent to make command'
+    required: false
+    type: 'string'
 
 runs:
   using: "composite"
   steps:
-    - name: "Friendly Name"
-      id: code
+    - name: "Setup action/environment"
       shell: bash
       run: |
-        # Friendly Name
-        INPUT="${{ inputs.input }}"
-        if [ -z "$INPUT" ]; then
-          echo "Error: mandatory input INPUT was not set/configured ❌"
+        # Setup action/environment
+
+        make_cmd=$(which make)
+        if [ ! -x "$make_cmd" ]; then
+          echo "Error: make command not found ❌"
           exit 1
         fi
 
-        echo "output=$INPUT" >> "$GITHUB_ENV"
-        echo "output=$INPUT" >> "$GITHUB_OUTPUT"
-        echo "Action received a valid input: $INPUT ✅"
-        echo "Action received a valid input: $INPUT ✅" >> "$GITHUB_STEP_SUMMARY"
+        # Output build heading
+        echo "# 🔨 Make Action" >> "$GITHUB_STEP_SUMMARY"
+
+        # Set build parameters/variables
+        echo "Action triggered by: ${GITHUB_TRIGGERING_ACTOR}"
+        datetime=$(date +'%Y-%m-%d-%H%M')
+        echo "Date and time stamp: $datetime"
+        echo "datetime=$datetime" >> "$GITHUB_ENV"
+        echo "datetime=${datetime}" >> "$GITHUB_OUTPUT"
+
+    - name: "Clone repository"
+      if: inputs.repository_url != ''
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        path: ${{ inputs.path }}
+
+    - name: "Running make"
+      shell: bash
+      run: |
+        # Running make
+
+        if [ -n "${{ inputs.repository }}" ]; then
+          REPO=$(basename ${{ inputs.repository }})
+          MAKE_PATH="$REPO/${{ inputs.path }}"
+        fi
+
+        if [ -n "${{ inputs.makefile_path }}" ]; then
+          MAKE_PATH="$MAKE_PATH/${{ inputs.makefile_path }}"
+        fi
+
+        if [ -n "$MAKE_PATH" ] && [ -d "$MAKE_PATH" ]; then
+          echo "Changing to directory: $MAKE_PATH 💬"
+          cd "$MAKE_PATH"
+        elif [ -n "$MAKE_PATH" ]; then
+          echo "Error: target path is not a valid directory ❌"
+          exit 1
+        fi
+
+        echo "Running: make ${{ inputs.make_args }}"
+        make ${{ inputs.make_args }}

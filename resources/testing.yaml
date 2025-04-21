@@ -1,0 +1,56 @@
+---
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2025 The Linux Foundation
+
+# Action test/validation workflow
+name: "Test GitHub Action 🧪"
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions: {}
+
+jobs:
+  ### Test the GitHub Action in this Repository ###
+  tests:
+    name: "Test local GitHub Action"
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: "Running local action: ${{ github.repository }}"
+        uses: ./
+
+      - name: 'Run make [download repository]'
+        uses: lfreleng-actions/make-action@main
+        with:
+          repository: 'lfreleng-actions/make-action'
+
+      - name: 'Run make [download repository to path]'
+        uses: lfreleng-actions/make-action@main
+        with:
+          repository: 'lfreleng-actions/make-action'
+          path: '/tmp'
+
+      - name: 'Run make [download repo to path, run in sub-folder]'
+        uses: lfreleng-actions/make-action@main
+        with:
+          repository: 'lfreleng-actions/make-action'
+          path: '/tmp'
+          makefile_path: 'resources'
+
+      - name: 'Run make [download repo to path, run in sub-folder w/args]'
+        uses: lfreleng-actions/make-action@main
+        with:
+          repository: 'lfreleng-actions/make-action'
+          path: '/tmp'
+          makefile_path: 'resources'
+          make_args: 'install'
