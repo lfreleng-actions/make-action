@@ -1,0 +1,66 @@
+---
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2025 The Linux Foundation
+
+# Action test/validation workflow
+name: "Test GitHub Action 🧪"
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions: {}
+
+jobs:
+  ### Test the project in this repository ###
+  tests:
+    name: "Test local GitHub Action"
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # Test action against local/repository Makefile
+      - name: "Run action: ${{ github.repository }} [Local/Makefile]"
+        uses: ./
+
+      # Download sample/Makefile project to specified path
+      # yamllint disable-line rule:line-length
+      - name: "Run action: ${{ github.repository }} [test-makefile-helm-chart/path]"
+        uses: ./
+        with:
+          repository: 'lfreleng-actions/test-makefile-helm-chart'
+          path: 'test-makefile-helm-chart'
+          make_args: '-C test-makefile-helm-chart'
+
+      # Download sample/Makefile project to current directory
+      # yamllint disable-line rule:line-length
+      - name: "Run action: ${{ github.repository }} [test-makefile-helm-chart/.]"
+        uses: ./
+        with:
+          repository: 'lfreleng-actions/test-makefile-helm-chart'
+
+      - name: "Checkout repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      # Run make against a bogus directory/location
+      - name: "Run action: ${{ github.repository }} [Failure]"
+        id: failure
+        uses: ./
+        with:
+          make_args: '-C junk-directory'
+        continue-on-error: true
+
+      - name: "Validate previous step failure"
+        if: steps.failure.outcome == 'success'
+        shell: bash
+        run: |
+          # Validate previous step failure
+          echo "Error: previous step should have failed ❌"
+          exit 1
