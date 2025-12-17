@@ -12,19 +12,15 @@ inputs:
     # Uses actions/checkout to clone the repository
     description: 'Remote Git repository URL to download'
     required: false
-    type: 'string'
   path:
     description: 'Download the repository to this local filesystem path'
     required: false
-    type: 'string'
   make_args:
     description: 'Arguments/flags sent to make command'
     required: false
-    type: 'string'
   debug:
     description: 'Set true to enable additional diagnostic output'
     required: false
-    type: 'boolean'
     default: false
 
 runs:
