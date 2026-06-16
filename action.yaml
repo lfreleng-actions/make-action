@@ -21,7 +21,7 @@ inputs:
   debug:
     description: 'Set true to enable additional diagnostic output'
     required: false
-    default: false
+    default: 'false'
 
 runs:
   using: 'composite'
