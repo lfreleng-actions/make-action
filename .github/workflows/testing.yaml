@@ -31,6 +31,8 @@ jobs:
     steps:
       - name: "Checkout repository"
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       # Test action against local/repository Makefile
       - name: "Run action: ${{ github.repository }} [Local/Makefile]"
@@ -54,6 +56,8 @@ jobs:
 
       - name: "Checkout repository"
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       # Run make against a bogus directory/location
       - name: "Run action: ${{ github.repository }} [Failure]"
