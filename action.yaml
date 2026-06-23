@@ -32,9 +32,15 @@ runs:
       with:
         repository: "${{ inputs.repository }}"
         path: "${{ inputs.path }}"
+        persist-credentials: false
 
     - name: 'Setup action/environment'
       shell: bash
+      env:
+        REPOSITORY: ${{ inputs.repository }}
+        REPO_PATH: ${{ inputs.path }}
+        MAKE_ARGS: ${{ inputs.make_args }}
+        DEBUG: ${{ inputs.debug }}
       run: |
         # Setup action/environment
 
@@ -49,35 +55,44 @@ runs:
         datetime=$(date +'%Y-%m-%d-%H%M')
         echo "Date and time stamp: $datetime"
 
-        if [ -n "${{ inputs.path }}" ] && \
-          [ -z "${{ inputs.make_args }}" ]; then
+        if [ -n "$REPO_PATH" ] && \
+          [ -z "$MAKE_ARGS" ]; then
           echo 'Repository downloaded to non-local path ⚠️'
-          echo "Suggested make_args: -C ${{ inputs.path }}"
+          echo "Suggested make_args: -C $REPO_PATH"
+          # make_args is intentionally expanded unquoted (word-split)
+          # when make is invoked, so a path containing whitespace
+          # cannot be represented; flag that explicitly rather than
+          # implying shell quoting would help.
+          case "$REPO_PATH" in
+            *[[:space:]]*)
+              echo "Note: make_args uses unquoted word-splitting;" \
+                "paths containing spaces are not supported" ;;
+          esac
         fi
 
         # Output build heading
         echo '# 🔨 Make Action' >> "$GITHUB_STEP_SUMMARY"
         echo "Directory: $PWD" >> "$GITHUB_STEP_SUMMARY"
-        if [ -n "${{ inputs.repository }}" ]; then
-          echo "Repository: ${{ inputs.repository }}" \
+        if [ -n "$REPOSITORY" ]; then
+          echo "Repository: $REPOSITORY" \
             >> "$GITHUB_STEP_SUMMARY"
         fi
-        if [ -n "${{ inputs.path }}" ]; then
-          echo "Path: ${{ inputs.path }}" >> "$GITHUB_STEP_SUMMARY"
+        if [ -n "$REPO_PATH" ]; then
+          echo "Path: $REPO_PATH" >> "$GITHUB_STEP_SUMMARY"
         fi
 
-        debug_lower=$(echo "${{ inputs.debug }}" | tr '[:upper:]' '[:lower:]')
+        debug_lower=$(echo "$DEBUG" | tr '[:upper:]' '[:lower:]')
         if [ "f$debug_lower" = 'ftrue' ]; then
           echo '🐞 Running: find . -name Makefile'
           find . -name Makefile
         fi
 
         # Automatically include -C option when make_args empty and path given
-        if [ -z "${{ inputs.make_args }}" ] && \
-          [ -n "${{ inputs.path }}" ]; then
-          make_args="-C ${{ inputs.path }}"
+        if [ -z "$MAKE_ARGS" ] && \
+          [ -n "$REPO_PATH" ]; then
+          make_args="-C $REPO_PATH"
         else
-          make_args="${{ inputs.make_args }}"
+          make_args="$MAKE_ARGS"
         fi
 
         if "$make_cmd" $make_args; then
