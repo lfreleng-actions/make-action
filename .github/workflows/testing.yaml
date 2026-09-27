@@ -40,12 +40,12 @@ jobs:
 
       # Test action against local/repository Makefile
       - name: "Run action: ${{ github.repository }} [Local/Makefile]"
-        uses: ./
+        uses: $/
 
       # Download sample/Makefile project to specified path
       # yamllint disable-line rule:line-length
       - name: "Run action: ${{ github.repository }} [test-makefile-helm-chart/path]"
-        uses: ./
+        uses: $/
         with:
           repository: 'lfreleng-actions/test-makefile-helm-chart'
           path: 'test-makefile-helm-chart'
@@ -54,19 +54,14 @@ jobs:
       # Download sample/Makefile project to current directory
       # yamllint disable-line rule:line-length
       - name: "Run action: ${{ github.repository }} [test-makefile-helm-chart/.]"
-        uses: ./
+        uses: $/
         with:
           repository: 'lfreleng-actions/test-makefile-helm-chart'
-
-      - name: "Checkout repository"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
 
       # Run make against a bogus directory/location
       - name: "Run action: ${{ github.repository }} [Failure]"
         id: failure
-        uses: ./
+        uses: $/
         with:
           make_args: '-C junk-directory'
         continue-on-error: true
